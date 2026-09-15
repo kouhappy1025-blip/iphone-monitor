@@ -23,7 +23,12 @@ PARTS = {
 }
 STORES = ["梅田", "心斎橋"]
 POSTAL_CODE = "530-0011"
-BUY_URL = "https://www.apple.com/jp/shop/buy-iphone/iphone-18-pro"
+# 通知から機種・容量・色・SIMフリーが選ばれた状態のページを直接開く
+BUY_BASE = "https://www.apple.com/jp/shop/buy-iphone/iphone-18-pro/"
+BUY_URLS = {
+    "MJX54J/A": BUY_BASE + "6.9%E3%82%A4%E3%83%B3%E3%83%81%E3%83%87%E3%82%A3%E3%82%B9%E3%83%97%E3%83%AC%E3%82%A4-256gb-%E3%83%96%E3%83%A9%E3%83%83%E3%82%AF-sim%E3%83%95%E3%83%AA%E3%83%BC",
+    "MJX84J/A": BUY_BASE + "6.9%E3%82%A4%E3%83%B3%E3%83%81%E3%83%87%E3%82%A3%E3%82%B9%E3%83%97%E3%83%AC%E3%82%A4-256gb-%E3%82%B0%E3%83%AC%E3%82%A4%E3%82%B7%E3%83%A3%E3%83%BC-sim%E3%83%95%E3%83%AA%E3%83%BC",
+}
 
 JST = ZoneInfo("Asia/Tokyo")
 FAST_START, FAST_END = dtime(5, 55), dtime(8, 15)
@@ -155,7 +160,8 @@ def run_check(state):
             head = "🚨 本日受け取りできます！" if d == now_jst().date() else "🔔 店舗受け取りの予約ができます"
             if last:
                 head += f"（{last:%m/%d} → {d:%m/%d} に早まりました）"
-            send_line(f"{head}\n{PARTS[pn]}\nApple {store}（{quote}）\n{BUY_URL}")
+            send_line(f"{head}\n{PARTS[pn]}\nApple {store}（{quote}）\n"
+                      f"▼Apple Storeアプリで購入 → 受け取り方法で「Apple {store}」を選択\n{BUY_URLS[pn]}")
             notified[key] = d.isoformat()
         elif not d and key in notified:
             del notified[key]   # 受け取り不可になったら、次に出たときまた通知する
