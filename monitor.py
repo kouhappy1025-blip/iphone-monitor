@@ -134,6 +134,11 @@ def check_once():
     return result
 
 
+def stock_message(head, store, pn, quote):
+    return (f"{head}\n{PARTS[pn]}\nApple {store}（{quote}）\n"
+            f"▼Apple Storeアプリで購入 → 受け取り方法で「Apple {store}」を選択\n{BUY_URLS[pn]}")
+
+
 def run_check(state):
     try:
         result = check_once()
@@ -160,8 +165,7 @@ def run_check(state):
             head = "🚨 本日受け取りできます！" if d == now_jst().date() else "🔔 店舗受け取りの予約ができます"
             if last:
                 head += f"（{last:%m/%d} → {d:%m/%d} に早まりました）"
-            send_line(f"{head}\n{PARTS[pn]}\nApple {store}（{quote}）\n"
-                      f"▼Apple Storeアプリで購入 → 受け取り方法で「Apple {store}」を選択\n{BUY_URLS[pn]}")
+            send_line(stock_message(head, store, pn, quote))
             notified[key] = d.isoformat()
         elif not d and key in notified:
             del notified[key]   # 受け取り不可になったら、次に出たときまた通知する
@@ -178,6 +182,10 @@ def main():
     mode = sys.argv[1] if len(sys.argv) > 1 else "once"
     if mode == "test":
         send_line("✅ テスト通知：GitHub Actions から送信しています")
+        return
+    if mode == "demo":
+        send_line("【練習】ここから下は在庫があると仮定した練習用の通知です")
+        send_line(stock_message("🔔 店舗受け取りの予約ができます", "梅田", "MJX84J/A", "受け取れる日 9月18日"))
         return
 
     state = load_state()
