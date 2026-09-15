@@ -1,0 +1,47 @@
+name: iPhone在庫監視
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"      # 5分ごと（1回だけ確認）
+    - cron: "30 20 * * *"      # 日本時間 05:30 朝の監視を開始
+    - cron: "45 20 * * *"      # 日本時間 05:45 （05:30の起動が遅れた・飛んだときの予備）
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "once=1回確認 / morning=朝の監視 / test=LINEテスト"
+        default: "test"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: monitor
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 監視
+        env:
+          LINE_TOKEN: ${{ secrets.LINE_TOKEN }}
+          LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            MODE="${{ github.event.inputs.mode }}"
+          elif [ "${{ github.event.schedule }}" = "*/5 * * * *" ]; then
+            MODE="once"
+          else
+            MODE="morning"
+          fi
+          echo "mode=$MODE"
+          python monitor.py "$MODE"
